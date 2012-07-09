@@ -1,3 +1,4 @@
+var checker = require('./checker')
 var http = require('http')
 var routes = require('./routes')
 var stack = require('stack')
@@ -9,4 +10,6 @@ http.createServer(stack(
   routes()
 )).listen(port, function() {
   util.log('Listening on '+port)
+  util.log('Starting checker...')
+  checker()
 })

@@ -1,10 +1,10 @@
-var redis = require('redis').createClient()
+var db = require('./db')
 var router = require('choreographer').router()
 var util = require('util')
 
 router.get('/', function(req, res) {
   var sites
-  redis.get('checky:sites', function(err, sites) {
+  db.get('checky:sites', function(err, sites) {
     if (err) {
       util.error(err.message)
       res.writeHead(500)
@@ -23,10 +23,10 @@ router.post('/', function(req, res) {
   })
   req.on('end', function() {
     var sites = JSON.parse(body)
-    for (var key in sites) {
-      sites[key].ok = true
+    for (var i=0; i<sites.length; i++) {
+      sites[i].ok = true
     }
-    redis.set('checky:sites', JSON.stringify(sites))
+    db.set('checky:sites', JSON.stringify(sites))
     res.writeHead(200, {'Content-Type': 'application/json'})
     res.end('{"ok":true}')
   })

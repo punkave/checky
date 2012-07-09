@@ -5,7 +5,7 @@ var util = require('util')
 function check() {
   db.get('checky:sites', function(err, sitesStr) {
     var sites = JSON.parse(sitesStr)
-    var pending = sites.length
+    var pending = sites && sites.length
     sites.forEach(function(site, i) {
       util.log('Checking '+site.name+'...')
       request.head(site.url, function(err, res) {

@@ -52,5 +52,5 @@ function setIfNew(sites, sitesStr) {
 }
 
 module.exports = function() {
-  setInterval(check, 5000)
+  setInterval(check, 300000)
 }

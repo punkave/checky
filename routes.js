@@ -6,7 +6,7 @@ router.get('/', function(req, res) {
   var sites
   db.get('checky:sites', function(err, sites) {
     if (err) {
-      util.error(err.message)
+      util.log(err.message)
       res.writeHead(500)
       res.end()
     }

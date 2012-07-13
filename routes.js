@@ -1,5 +1,7 @@
 var db = require('./db')
 var router = require('choreographer').router()
+var settings = require('./settings')
+var url = require('url')
 var util = require('util')
 
 router.get('/', function(req, res) {
@@ -17,12 +19,27 @@ router.get('/', function(req, res) {
 
 router.post('/', function(req, res) {
   var body = ''
+  var query = url.parse(req.url, true).query
+  if (!query.key) {
+    res.writeHead(400)
+    return res.end()
+  }
+  if (query.key != settings.secret) {
+    res.writeHead(403)
+    return res.end()
+  }
   req.setEncoding('utf8')
   req.on('data', function(chunk) {
     body += chunk
   })
   req.on('end', function() {
-    var sites = JSON.parse(body)
+    var sites
+    try {
+      sites = JSON.parse(body)
+    } catch (e) {
+      res.writeHead(400)
+      return res.end()
+    }
     for (var i=0; i<sites.length; i++) {
       sites[i].ok = true
     }

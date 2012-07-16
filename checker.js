@@ -10,16 +10,23 @@ function check() {
       util.log('Checking '+site.name+'...')
       request.head(site.url, function(err, res) {
         var ok = true
+        var errMess = ''
+        var stat
         if (err) {
-          util.log(err)
+          errMess = err.message
+          util.log(errMess)
           ok = false
         } else {
-          if (res.statusCode !== 200) ok = false
+          if (res.statusCode !== 200) {
+            errMess = res.statusCode
+            util.log(errMess)
+            ok = false
+          }
         }
+        // TODO log for every up or down change
         if (ok != site.ok) { // site status has changed
-          var stat = ok ? 'up' : 'down'
-          util.log('Site '+site.name+' is '+stat)
-          db.lpush('checky:sites:'+site.name, (new Date()).toISOString()+' Site is '+stat)
+          stat = ok ? 'UP' : 'DOWN'
+          db.lpush('checky:sites:'+site.name, (new Date()).toISOString()+' '+stat+' '+errMess)
           if (ok) {
             site.ok = ok // set site.ok to new status
           } else {
@@ -29,7 +36,9 @@ function check() {
               var down = true
               for (var i=0; i<prevStats.length; i++) {
                 prevStatsWords = prevStats[i].split(' ')
-                if (prevStatsWords[prevStatsWords.length-1] == 'up') down = false
+                console.log(prevStatsWords[1])
+                // "UP" or "DOWN" should be the second word in each log message after the timestamp
+                if (prevStatsWords[1] == 'UP') down = false
               }
               if (down) site.ok = ok // it's definitely down, so set status
             })

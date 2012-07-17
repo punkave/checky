@@ -10,7 +10,7 @@ function check() {
       util.log('Checking '+site.name+'...')
       request.head(site.url, function(err, res) {
         var ok = true
-        var errMess = ''
+        var errMess
         var stat
         if (err) {
           errMess = err.message
@@ -23,26 +23,11 @@ function check() {
             ok = false
           }
         }
-        // TODO log for every up or down change
         if (ok != site.ok) { // site status has changed
           stat = ok ? 'UP' : 'DOWN'
-          db.lpush('checky:sites:'+site.name, (new Date()).toISOString()+' '+stat+' '+errMess)
-          if (ok) {
-            site.ok = ok // set site.ok to new status
-          } else {
-            // don't say it's down unless it's been down for at least 3 rounds
-            db.lrange('checky:sites:'+site.name, 0, 2, function(err, prevStats) {
-              var prevStatsWords
-              var down = true
-              for (var i=0; i<prevStats.length; i++) {
-                prevStatsWords = prevStats[i].split(' ')
-                console.log(prevStatsWords[1])
-                // "UP" or "DOWN" should be the second word in each log message after the timestamp
-                if (prevStatsWords[1] == 'UP') down = false
-              }
-              if (down) site.ok = ok // it's definitely down, so set status
-            })
-          }
+          errMess = errMess ? ' ' + errMess : ''
+          db.lpush('checky:sites:'+site.name, (new Date()).toISOString()+' '+stat+errMess)
+          site.ok = ok // set site.ok to new status
         }
         if (!--pending) setIfNew(sites, sitesStr)
       })
@@ -53,7 +38,7 @@ function check() {
 function setIfNew(sites, sitesStr) {
   var newSitesStr = JSON.stringify(sites)
   if (newSitesStr != sitesStr) {
-    util.log('Setting sites...')
+    util.log('One or more site statuses have changed...')
     db.set('checky:sites', newSitesStr, function (err) {
       if (err) util.error(err.message)
     })

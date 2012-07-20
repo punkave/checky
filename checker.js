@@ -26,7 +26,7 @@ function check() {
         if (ok != site.ok) { // site status has changed
           stat = ok ? 'UP' : 'DOWN'
           errMess = errMess ? ' ' + errMess : ''
-          db.lpush('checky:sites:'+site.name, (new Date()).toISOString()+' '+stat+errMess)
+          db.lpush('checky:sites:'+site.slug, (new Date()).toISOString()+' '+stat+errMess)
           site.ok = ok // set site.ok to new status
         }
         if (!--pending) setIfNew(sites, sitesStr)

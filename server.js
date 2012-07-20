@@ -7,7 +7,7 @@ var util = require('util')
 var port = process.env.PORT || 5000
 
 http.createServer(stack(
-  routes()
+  routes
 )).listen(port, function() {
   util.log('Listening on '+port)
   util.log('Starting checker...')

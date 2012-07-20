@@ -4,16 +4,16 @@ var settings = require('./settings')
 var url = require('url')
 var util = require('util')
 
-router.get('/', function(req, res) {
+router.get('/', function(req, res, next) {
   var sites
   db.get('checky:sites', function(err, sites) {
-    if (err) return err500(err, res)
+    if (err) return next(err)
     res.writeHead(200, {'Content-Type': 'application/json'})
     res.end(sites)
   })
 })
 
-router.post('/', function(req, res) {
+router.post('/', function(req, res, next) {
   var body = ''
   var query = url.parse(req.url, true).query
   if (!query.key) {
@@ -40,7 +40,7 @@ router.post('/', function(req, res) {
       sites[i].ok = true
     }
     db.set('checky:sites', JSON.stringify(sites), function(err) {
-      if (err) return err500(err, res)
+      if (err) return next(err)
       res.writeHead(200, {'Content-Type': 'application/json'})
       res.end('{"ok":true}')
     })
@@ -49,7 +49,7 @@ router.post('/', function(req, res) {
 
 router.get('/*', function(req, res, next, siteSlug) {
   db.get('checky:sites', function(err, sitesVal) {
-    if (err) return err500(err, res)
+    if (err) return next(err)
     var sites = JSON.parse(sitesVal)
     var found
     for (var i=0; i<sites.length; i++) {
@@ -60,19 +60,11 @@ router.get('/*', function(req, res, next, siteSlug) {
     }
     if (!found) return next()
     db.lrange('checky:sites:'+siteSlug, 0, 299, function(err, log) {
-      if (err) return err500(err, res)
+      if (err) return next(err)
       res.writeHead(200, {'Content-Type': 'application/json'})
       res.end(JSON.stringify(log))
     })
   })
 })
 
-module.exports = function() {
-  return router
-}
-
-function err500(err, res) {
-  util.log(err.message)
-  res.writeHead(500)
-  res.end()
-}
+module.exports = router

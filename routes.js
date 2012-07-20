@@ -50,18 +50,20 @@ router.post('/', function(req, res) {
 router.get('/*', function(req, res, next, siteSlug) {
   db.get('checky:sites', function(err, sitesVal) {
     if (err) return err500(err, res)
-    var site, sites = JSON.parse(sitesVal)
+    var sites = JSON.parse(sitesVal)
+    var found
     for (var i=0; i<sites.length; i++) {
-      site = sites[i]
-      if (site.slug == siteSlug) {
-        db.lrange('checky:sites:'+site.slug, 0, 299, function(err, log) {
-          if (err) return err500(err, res)
-          res.writeHead(200, {'Content-Type': 'application/json'})
-          res.end(JSON.stringify(log))
-        })
+      if (sites[i].slug == siteSlug) {
+        found = true
         break
       }
     }
+    if (!found) return next()
+    db.lrange('checky:sites:'+siteSlug, 0, 299, function(err, log) {
+      if (err) return err500(err, res)
+      res.writeHead(200, {'Content-Type': 'application/json'})
+      res.end(JSON.stringify(log))
+    })
   })
 })
 

@@ -7,11 +7,7 @@ var util = require('util')
 router.get('/', function(req, res) {
   var sites
   db.get('checky:sites', function(err, sites) {
-    if (err) {
-      util.log(err.message)
-      res.writeHead(500)
-      res.end()
-    }
+    if (err) return err500(err, res)
     res.writeHead(200, {'Content-Type': 'application/json'})
     res.end(sites)
   })
@@ -43,12 +39,38 @@ router.post('/', function(req, res) {
     for (var i=0; i<sites.length; i++) {
       sites[i].ok = true
     }
-    db.set('checky:sites', JSON.stringify(sites))
-    res.writeHead(200, {'Content-Type': 'application/json'})
-    res.end('{"ok":true}')
+    db.set('checky:sites', JSON.stringify(sites), function(err) {
+      if (err) return err500(err, res)
+      res.writeHead(200, {'Content-Type': 'application/json'})
+      res.end('{"ok":true}')
+    })
+  })
+})
+
+router.get('/*', function(req, res, next, siteSlug) {
+  db.get('checky:sites', function(err, sitesVal) {
+    if (err) return err500(err, res)
+    var site, sites = JSON.parse(sitesVal)
+    for (var i=0; i<sites.length; i++) {
+      site = sites[i]
+      if (site.slug == siteSlug) {
+        db.lrange('checky:sites:'+site.slug, 0, 299, function(err, log) {
+          if (err) return err500(err, res)
+          res.writeHead(200, {'Content-Type': 'application/json'})
+          res.end(JSON.stringify(log))
+        })
+        break
+      }
+    }
   })
 })
 
 module.exports = function() {
   return router
+}
+
+function err500(err, res) {
+  util.log(err.message)
+  res.writeHead(500)
+  res.end()
 }
